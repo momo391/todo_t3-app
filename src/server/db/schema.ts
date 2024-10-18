@@ -1,36 +1,33 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
 import { sql } from "drizzle-orm";
 import {
   index,
+  pgEnum,
   pgTableCreator,
-  serial,
   timestamp,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
 export const createTable = pgTableCreator((name) => `todo_t3-app_${name}`);
+export const priorityEnum = pgEnum("task_priority", ["low", "medium", "high"]);
 
-export const posts = createTable(
-  "post",
+export const taskTable = createTable(
+  "tasks",
   {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
+    id: uuid("id").primaryKey().defaultRandom(),
+    task: varchar("task", { length: 256 }),
+    content: varchar("content", { length: 2048 }),
+    startAt: timestamp("start_at", { withTimezone: true }),
+    endAt: timestamp("end_at", { withTimezone: true }),
+    priority: priorityEnum("priority").default("medium"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date()
+      () => new Date(),
     ),
   },
   (example) => ({
-    nameIndex: index("name_idx").on(example.name),
-  })
+    taskIndex: index("task_idx").on(example.task),
+  }),
 );
